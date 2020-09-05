@@ -1,0 +1,44 @@
+
+---
+suite: this test suite
+tests:
+- name: the first test
+  runs:
+  - name: first run
+    calls:
+    - number: 420999888777
+      seq:
+      - out: INVITE
+        service:
+          num: 525
+          place: route
+        to: 4797778239
+        bnoa: 4
+        anoa: 4
+        flags:
+          - sdp
+          - rtp_new
+        headers: |
+          X-tc: {{ .TcName }}
+          Call-ID: MSP-{{.Cid}}
+      - in: 100
+      - in: 180
+      - in: 200
+      - rtp: 20
+      - out: ACK
+      - out: BYE
+      - in: 200
+    - number: 4797778239
+      alias: Me
+      seq:
+        - in: INVITE
+          tests:
+            - from: ".*4797778239.*"
+            - display: "Matthias"
+        - out: 100
+        - out: 180
+          delay: 100
+        - out: 200
+          delay: 1500
+        - in: ACK
+        - auto: true
