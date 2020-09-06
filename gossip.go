@@ -18,7 +18,9 @@ var (
 )
 
 func setup() {
-
+  for _,provider:=range config.Local {
+    NewProvider(provider)
+  }
 }
 
 func handleSignals() {
@@ -47,8 +49,9 @@ func main() {
   cfgFile := flag.String("c", "gossip.cfg", "the configuration for gossip")
   verbose= flag.Int("v",0,"verbosity of gossip for testing; higher means more")
   flag.Parse()
-  config,err := GetConfig(*cfgFile)
+  cfg,err := GetConfig(*cfgFile)
   if err != nil { log.Fatal(err)}
+  config=cfg
   setup()
   for _, arg:=range flag.Args() {
     log.Println("investigating "+arg)

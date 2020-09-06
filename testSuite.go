@@ -11,6 +11,12 @@ type GossipTestService struct{
   Number string `yaml:"num,omitempty"`
   Place string `yaml:"place,omitempty"`
 }
+
+type GossipMsgTest struct{
+  From string `yaml:"from,omitempty"`
+  Display string `yaml:"display,omitempty`
+}
+
 type GossipTestMsg struct{
   In string `yaml:"in,omitempty"`
   Out string `yaml:"out,omitempty"`
@@ -23,6 +29,7 @@ type GossipTestMsg struct{
   Rtp int `yaml:"rtp,omitempty"`
   Auto bool `yaml:"auto,omitempty"`
   Delay int `yaml:"delay,omitempty"`
+  Tests []GossipMsgTest `yaml:"tests,omitempty"`
 }
 
 type GossipTestCall struct{
