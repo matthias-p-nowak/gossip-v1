@@ -1,53 +1,79 @@
 package main
 
 import(
-  "log"
   "sync"
   "time"
 )
 
+const (
+  Number = iota
+  CallId
+  Via
+  DirectoryEnd
+)
+
+type director map[string]chan *GossipItem
+
 var (
-  director sync.Map
-  cleaned int
+  DirectorChans []director
+  NumberLock []sync.RWMutex
 )
 
 
-func checkAndDelete(key interface{}, val interface{}) bool {
-  keyStr:=key.(string)
-  valChan:=val.(chan *GossipItem)
-  select{
-    case valChan <- nil:
-    default:
-      cleaned++
-      director.Delete(keyStr)
-  }
-  return true
-}
 
 func cleanUpDirector(){
   for{
-    time.Sleep(time.Second)
-    cleaned=0
-    director.Range(checkAndDelete)
-    if cleaned >0 {
-      log.Printf("cleaned %d\n",cleaned)
-    }
+    for i:=0;i<DirectoryEnd;i++{
+      time.Sleep(time.Second)
+      k2d:=[]string{}
+      NumberLock[i].RLock()
+        for k,v:=range DirectorChans[i]{
+          select {
+            case v <- nil:
+              // everything ok
+            default:
+              // channel is filled == no reader left
+              k2d=append(k2d,k)
+          }
+        }
+      NumberLock[i].RUnlock()
+      NumberLock[i].Lock()
+        for _,k:=range k2d {
+          delete(DirectorChans[i],k)
+        }
+      NumberLock[i].Unlock()
+      }
   }
 }
 
-func RegisterChan(key string, ch chan *GossipItem){
-  director.Store(key,ch)
+func RegisterChan(dir int, key string, ch chan *GossipItem){
+  NumberLock[dir].Lock()
+  DirectorChans[dir][key]=ch
+  NumberLock[dir].Unlock()
 }
 
-func SendItem(key string, it *GossipItem) (ok bool) {
-  if val,ok:=director.Load(key);ok {
-    ch:=val.(chan *GossipItem)
-    ch <- it
+
+func SendItem(dir int, key string, it *GossipItem) (ok bool) {
+  NumberLock[dir].RLock()
+  ch:=DirectorChans[dir][key]
+  NumberLock[dir].RUnlock()
+  if ch == nil {
+    return false
+  }
+  select {
+  case ch <- it:
+      ok=true
+  default:
+    ok=false
   }
   return
 }
 
 func init(){
-  log.Println("starting cleanup")
+  NumberLock=make([]sync.RWMutex,DirectoryEnd)
+  DirectorChans=make([]director,DirectoryEnd)
+  for i:=0;i<DirectoryEnd;i++{
+    DirectorChans[i]=make(director)
+  }
   go cleanUpDirector()
 }
