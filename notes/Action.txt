@@ -1,0 +1,8 @@
+Content-Type: text/x-zim-wiki
+Wiki-Format: zim 0.4
+Creation-Date: 2020-09-13T21:00:21+02:00
+
+====== Action ======
+Created Sunday 13 September 2020
+
+It's an interface with several implementations.

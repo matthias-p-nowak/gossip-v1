@@ -5,6 +5,9 @@ Creation-Date: 2020-09-12T11:41:30+02:00
 ====== Function ======
 Created Saturday 12 September 2020
 
+====== Overview ======
+
+Gossip uses the goroutine concurrency of Golang and channels. Each call party is handled by a goroutine that reads from a dedicated channel and executes some actions. A central director routes SIP messages using maps. Their keys are tags, numbers, callId and values are the input channels of those goroutines.
 
 
 ====== Gossip ======
@@ -14,7 +17,7 @@ The main function
 * reads the configuration
 * reads the tests from files, walking directories, tests are given on command line
 * handles signals - TODO: what should be responded to
-* Runs a prescribed number of loops
+* Runs a prescribed number of loops and sends the tests through a channel.
 
 ====== Inner workings ======
 
@@ -63,13 +66,40 @@ The test suites are read in from specifications in yaml. They describe the tests
 
 ===== Limiting =====
 
-The calls are both limited by the rate of instantiation and the number of concurrent calls. Different tests might be executed in parallel, since they should be independent. 
+The calls are both limited by the rate of instantiation and the number of concurrent calls. Different tests might be executed in parallel, since they should be independent. The call instantiation rate is regulated by a ticker channel. The concurrency is based on a counter. 
 
-The instantiation rate is regulated by a ticker channel. The concurrency is based on a counter.
+Similarly, the main function loops through the tests and creates new executors, if the current number isn't big enough. Executors check at each loop start, if their presence falls within the limit. If not, they terminate. If the pass the limit test, they will proceed to read a test from their input channel.
+
+===== Main routine =====
+
+1. The command line flags are read
+2. The configuration is read
+3. Configuration values are overriden by command line values
+4. Setup of the infrastructure is carried out
+5. Tests are read in from places specified on the command line
+6. Signal handling is commenced.
+7. (TODO: implement) optional interactive management.
+8. The prescribed number of loops are carried out. When all tests are done, the main routine exists.
+
+==== Execution of tests ====
+
+The loop in //main// iterates through the tests. Before the start of each test, it checks if there are enough test run executors running. If not, a new one is spawned and the test is send through the channel.
 
 ===== Director =====
 
-The test executioner puts the required amount of tests into a channel, from which they are 
+The director maintains a number of maps, that map from tags/values to channels. For incoming calls, the called number is used as a first instance. Due to concurrency, access must be serialized using a Mutex. Different entities can register channels as a receiver for messages with certain tags.
+
+==== Removal of channels ====
+
+Since different entities can register channels under arbitrary keys, channels are removed when the listener are gone. This is the case when the channel runs full and blocks submissions.
+
+At seconds interval, a nil message is send to all channels. Channels that block are then removed from the map.
+
+===== Retransmissions and automatic answers =====
+
+Since UDP is unreliable, each initial message is send repeatedly until its reception is acknowledged. 100-trying stops retransmission of Invites, which means that final responses must be retransmitted until stopped by an ACK. 
+
+Cancel and Bye do terminate a call and their response do not provide any additional information. Hence their 200 response can be generated automatically. Similarly, the 100-trying on Invites don't carry information - hence they can be an automatic response and are implement like that.
 
 ===== Test run =====
 

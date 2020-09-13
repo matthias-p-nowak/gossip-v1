@@ -1,6 +1,7 @@
 package main
 
 import(
+  "runtime"
   "sync"
   "time"
 )
@@ -45,6 +46,7 @@ func cleanUpDirector(){
           delete(DirectorChans[i],k)
         }
       NumberLock[i].Unlock()
+      runtime.Gosched()
       }
   }
 }
