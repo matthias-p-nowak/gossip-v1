@@ -1,0 +1,9 @@
+Content-Type: text/x-zim-wiki
+Wiki-Format: zim 0.4
+Creation-Date: 2020-09-13T20:41:25+02:00
+
+====== CallExecution ======
+Created Sunday 13 September 2020
+
+The compiler scans the tests and creates a list of actions. Each [[Action|action]] has a previous (which it came from during execution) and next action (or two in case of a branch).
+

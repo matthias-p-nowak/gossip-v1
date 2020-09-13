@@ -1,0 +1,11 @@
+Content-Type: text/x-zim-wiki
+Wiki-Format: zim 0.4
+Creation-Date: 2020-09-12T21:20:45+02:00
+
+====== GossipMsg ======
+
+Datastructure that represent a SIP message. 
+
+===== GossipMsgHeaders =====
+Headers in SIP are basically a header name and a header value. However, header names can appear several times like in VIA, Route, and RecordRoute headers. Hence, each header is a list of values.
+

@@ -1,0 +1,42 @@
+---
+suite: this test suite
+tests:
+- name: the first test
+  description: my first test
+  comments:
+    - it fails all the time
+  calls:
+  - number: 420999888777
+    seq:
+    - out: INVITE
+      to: 4797778239
+      bnoa: 4
+      anoa: 4
+      service: 525
+      flags:
+      - sdp
+      - rtp_new
+      headers: |
+        X-tc: {{ .TestName }}
+        Call-ID: MSP-{{.CallId}}
+    - in: 100
+    - in: 180
+    - in: 200
+    - rtp: 20
+    - out: ACK
+    - out: BYE
+    - in: 200
+  - number: 4797778239
+    alias: Me
+    seq:
+    - in: INVITE
+      matches:
+      - from: ".*4797778239.*"
+      - display: "Matthias"
+    - out: 100
+    - out: 180
+      delay: 100
+    - out: 200
+      delay: 1500 ms
+    - in: ACK
+    - auto: true

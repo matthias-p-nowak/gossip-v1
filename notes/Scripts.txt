@@ -1,0 +1,15 @@
+Content-Type: text/x-zim-wiki
+Wiki-Format: zim 0.4
+Creation-Date: 2020-09-12T11:47:56+02:00
+
+====== Scripts ======
+Created Saturday 12 September 2020
+
+The scripts directory contains:
+* a resource embedder go-bin
+
+===== go-bin =====
+It reads and compresses the //walked// files with bzip 2. It then stores the files as a map, using the filename as a key. The values are the bytes in hexadecimal. The written go-file contains a small routine for reading those files. __func GetStored(fn string)(r io.Reader)__
+
+===== Walked =====
+Walked means, that the supplied files are assumed to be files or directories. Directories are treated as in the usual file walk.
