@@ -1,5 +1,7 @@
 package main
-
+/*
+ *
+ */
 import (
   "fmt"
   "gopkg.in/yaml.v2"
@@ -13,8 +15,10 @@ type Config struct{
   Continuous bool `yaml:"continuous"`
   Loops int `yaml:"loops"`
   Rate int `yaml:"rate"`
+  Concurrent int32 `yaml:"concurrent"`
   Local []string `yaml:"local"`
   Remote string `yaml:"remote"`
+  Verbose int `yaml:"verbose"`
 }
 
 func GetConfig(fn string)(cfg *Config, err error){
@@ -27,9 +31,11 @@ func GetConfig(fn string)(cfg *Config, err error){
     }
   err = yaml.Unmarshal(data, cfg)
   if err != nil {log.Fatal(err)}
-    if(*verbose >7 ){
+  /*
+  if(*verbose >7 ){
   data, err=yaml.Marshal(cfg)
   fmt.Println(string(data))
-}
+  }
+  */
   return
 }

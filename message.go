@@ -1,24 +1,48 @@
 package main
 
 import(
-  "net"
+  // "net"
 )
 
-type GossipMsgHeaders struct {
-  To string
-  From string
-  CallId string
-  CSeg int
-  Via []string
-  Route []string
-  Rroute []string
-  Others []string
+// Retransmission count
+const (
+  NoRetrans = iota
+  ReTrOnce
+  ReTrFirst
+  ReTrSecond
+  ReTrThird
+  ReTrFourth
+  ReTrFifth
+  ReTrSixth
+  ReTrSeventh
+  ReTrEnd
+)
+
+// the message direction
+const (
+  Undefined = iota
+  MsgIn
+  MsgOut
+)
+
+// Headers might have multiple values
+type GossipMsgHeaders map[string][]string
+
+// The SIP message with it's components
+type GossipMsg struct {
+  Url string
+  Header GossipMsgHeaders
+  Body string
+  RetrCount int
+  Direction int
+  RawMsg []byte
 }
 
-type GossipMsg struct {
-  Network string
-  Local net.Addr
-  Remote net.Addr
-  Headers GossipMsgHeaders
-  Body string
+type GossipCall struct {
+  CallId string
+  CallSeq int
+}
+
+type GossipMsgData struct{
+  Call *GossipCall
 }

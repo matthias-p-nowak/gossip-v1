@@ -4,13 +4,16 @@ import (
   "time"
 )
 
+//
 type GossipItem struct {
-  expired bool
-  done bool
+  msg *GossipMsg
 }
 
-func delaySend(ms int , ch chan *GossipItem, gi *GossipItem){
-  time.AfterFunc(time.Duration(ms*1000), func(){
-    ch <- gi
+func delaySend(dur time.Duration, ch chan *GossipItem, gi *GossipItem){
+  time.AfterFunc(dur, func(){
+    select{
+      case ch <- gi:
+      default:
+    }
   })
 }

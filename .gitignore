@@ -10,3 +10,6 @@ gossip
 # Dependency directories (remove the comment below to include it)
 # vendor/
 snippets.go
+*.zim
+go.sum
+*.geany

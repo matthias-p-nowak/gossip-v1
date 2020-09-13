@@ -1,0 +1,86 @@
+Content-Type: text/x-zim-wiki
+Wiki-Format: zim 0.4
+Creation-Date: 2020-09-12T11:41:30+02:00
+
+====== Function ======
+Created Saturday 12 September 2020
+
+
+
+====== Gossip ======
+
+The main function 
+* reads command line arguments
+* reads the configuration
+* reads the tests from files, walking directories, tests are given on command line
+* handles signals - TODO: what should be responded to
+* Runs a prescribed number of loops
+
+====== Inner workings ======
+
+There is a hierarchy to the test execution.
+
+* Test suite 1
+	* Test 1
+		* Call 1
+			* Call party alpha
+			* Call party beta
+				* Call
+					* Dialog
+						* Transaction 1
+							* Message Invite
+							* Message 100
+							* ...
+						* Transaction 2
+* Test suite 2
+
+The test suites are read in from specifications in yaml. They describe the tests with each call party in a separate stream. The stream contains both messages, tests and other actions.
+* Test suite
+	* Test
+		* Call
+			* Actions
+
+===== Layer organisation =====
+
+1. SipProvider, UDP and TCP. They send and receive byte packages to and from the remote side. They assemble the messages from the byte stream or create the bytes to send. They:
+	a. do final touch on the message
+		1. content-length
+		2. route and via stuff
+	b. transmit packages to the remote side
+	c. handle retransmissions
+	d. stop retransmissions when there are automatic answers (100 trying, 200 on Cancel, 200 on Bye)
+	e. transform received messages into a [[GossipMsg]]
+	f. transfer messages to the Director level
+2. Route/Director: It handles messages and routes them to the lower level (SipProviders) or upper level (Call party handlers)
+3. Transaction layer: consists of helper functions that create new messages based on previous or from scratch
+4. Dialog level: mostly a data structure for status keeping
+5. Call level: general structure with status information and similar
+6. Call party level: a goroutine that is a handler for messages. Each goroutine has an own dedicated channel for receiving [[GossipItems]] .
+7. Test run: it creates and registers the involved call parties and spawns the associated goroutines, after each run, it accumulated the status quo from each party
+8. Test: it initiates the separate runs and accumulates the results
+9. Test suite: only exists as a data structure for grouping tests
+10. Test Executionair - runs the prescribed number of loops of test suites.
+
+===== Limiting =====
+
+The calls are both limited by the rate of instantiation and the number of concurrent calls. Different tests might be executed in parallel, since they should be independent. 
+
+The instantiation rate is regulated by a ticker channel. The concurrency is based on a counter.
+
+===== Director =====
+
+The test executioner puts the required amount of tests into a channel, from which they are 
+
+===== Test run =====
+
+A test consists of one or more call parties, each one with a unique phone number. Each party reads its messages from a dedicated channel, which has to be registered in the director. The calling party needs to take a token from the limiter.
+
+===== Test run executioner =====
+
+It reads the tests to be executed from a dedicated channel. Each test needs to be locked, so the same test cannot be executed twice. 
+
+====== Components ======
+
+* [[Director]], sorts which function channel will deal with the incoming message
+* [[Scripts,]] at the moment only an example for config 
+

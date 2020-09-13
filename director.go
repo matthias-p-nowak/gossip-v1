@@ -5,6 +5,7 @@ import(
   "time"
 )
 
+// used as index for the different maps
 const (
   Number = iota
   CallId
@@ -12,15 +13,17 @@ const (
   DirectoryEnd
 )
 
+// maps a certain tag to a channel for gossip items
 type director map[string]chan *GossipItem
 
 var (
+  // the maps from tags to strings
   DirectorChans []director
+  // the related mutex for access serialization
   NumberLock []sync.RWMutex
 )
 
-
-
+// when the goroutines serving the channels end, they might have been registered several times
 func cleanUpDirector(){
   for{
     for i:=0;i<DirectoryEnd;i++{
@@ -52,6 +55,16 @@ func RegisterChan(dir int, key string, ch chan *GossipItem){
   NumberLock[dir].Unlock()
 }
 
+func FillChan(ch chan *GossipItem){
+  for {
+    select {
+      case ch <- nil:
+        // ok
+      default:
+        return
+    }
+  }
+}
 
 func SendItem(dir int, key string, it *GossipItem) (ok bool) {
   NumberLock[dir].RLock()
