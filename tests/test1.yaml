@@ -22,7 +22,6 @@ tests:
     - in: 100
     - in: 180
     - in: 200
-    - rtp: 20
     - out: ACK
     - out: BYE
     - in: 200

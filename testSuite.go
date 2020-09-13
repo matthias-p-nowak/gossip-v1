@@ -4,10 +4,18 @@ import(
   "gopkg.in/yaml.v2"
   "io/ioutil"
   "log"
-  "sync"
 )
 
+type GossipTest2 struct {
 
+}
+
+type GossipMsgGrab struct{
+  Header string `yaml:"header"`
+  Body bool `yaml:"body"`
+  RegExp string `yaml:"body"`
+  Storage map[string]string `yaml:"store"`
+}
 
 type GossipTestMsg struct{
   In string `yaml:"in,omitempty"`
@@ -15,22 +23,22 @@ type GossipTestMsg struct{
   To string `yaml:"to,omitempty"`
   Anoa int `yaml:"anoa,omitempty"`
   Bnoa int `yaml:"bnoa,omitempty"`
+  Variables map[string]string `yaml:"variables,omitempty"`
   Flags []string `yaml:"flags,omitempty"`
   Headers string `yaml:"headers,omitempty"`
   Rtp int `yaml:"rtp,omitempty"`
   Auto bool `yaml:"auto,omitempty"`
   Delay string `yaml:"delay,omitempty"`
+  Test []*GossipTest2 `yaml:"test,omitempty"`
 }
 
 type GossipTestCall struct{
   Number string `yaml:"number"`
-  Msgs []GossipTestMsg `yaml:"seq"`
+  Msgs []*GossipTestMsg `yaml:"seq"`
 }
 
 type GossipTest struct{
   Name string `yaml:"name"`
-  run int
-  Lock sync.Mutex
   Calls []*GossipTestCall `yaml:"calls"`
 }
 

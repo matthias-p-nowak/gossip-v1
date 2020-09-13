@@ -9,6 +9,7 @@ import (
   "os/signal"
   "path/filepath"
   "syscall"
+  "sync"
   "sync/atomic"
 )
 
@@ -72,6 +73,12 @@ func main() {
   go handleSignals()
   if cfg.Loops < 1 {
     cfg.Loops = 1
+  }
+  // creating Mutex for each test
+  for _,ts:=range testSuites{
+    for _,t:=range ts.Tests {
+      TestLocks[t]=new(sync.Mutex)
+    }
   }
   for i := 0; i < cfg.Loops; i++ {
     if cfg.Continuous {
