@@ -1,5 +1,5 @@
 Content-Type: text/x-zim-wiki
-Wiki-Format: zim 0.4
+Wiki-Format: zim 0.6
 Creation-Date: 2020-09-13T20:41:25+02:00
 
 ====== CallExecution ======
@@ -7,3 +7,4 @@ Created Sunday 13 September 2020
 
 The compiler scans the tests and creates a list of actions. Each [[Action|action]] has a previous (which it came from during execution) and next action (or two in case of a branch).
 
+The executioner executes a chain of actions. Calls are received using a complex function with timeout, checking for duplicates (ignored) and other stuff. NILs are ignored, timouts are either specified or default. Delays in a scenario is by timeout.

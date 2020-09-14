@@ -66,6 +66,7 @@ func runCall(call *GossipTestCall, wg *sync.WaitGroup, ch chan *GossipItem) {
   // compiling the call
   actions := compileCall(call)
   // doing all the actions
+  // TODO, rewrite it using a function for receiving messages with a timeout
   for msg := range ch {
     // if msg is nil check for delayed actions
     if msg != nil {

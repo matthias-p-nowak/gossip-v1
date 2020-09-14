@@ -61,6 +61,7 @@ func readFile(fn string, info os.FileInfo, err error) error{
     cmd:=exec.Command("bzip2","-c",fn)
     cmd.Stdout=bufio.NewWriter(&bb)
     cmd.Run()
+    fn=strings.ReplaceAll(fn,"\\","/")
     storedFiles[fn]=bb.Bytes()
     return nil
 }
