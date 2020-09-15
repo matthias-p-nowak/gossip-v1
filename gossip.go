@@ -90,9 +90,9 @@ func main() {
       for ti,test:=range ts.Tests {
         log.Printf(" test(%d): %s\n",ti,test.Name)
         TestsUnderExec.Add(1)
-        if atomic.LoadInt32(&TestProcCount) < cfg.Concurrent {
+        if atomic.LoadInt32(&TestRunnerCount) < cfg.Concurrent {
           log.Println("starting a new test executor")
-          go TestExecutor()
+          go TestRunner()
         }
         TestTasks <- test
       }
