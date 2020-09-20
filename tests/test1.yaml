@@ -34,8 +34,8 @@ tests:
       - display: "Matthias"
     - out: 100
     - out: 180
-      delay: 100
+      delay: 100ms
     - out: 200
-      delay: 1500 ms
+      delay: 1500ms
     - in: ACK
-    - auto: true
+    - continue: true

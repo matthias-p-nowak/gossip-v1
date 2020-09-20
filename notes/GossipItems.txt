@@ -1,0 +1,8 @@
+Content-Type: text/x-zim-wiki
+Wiki-Format: zim 0.4
+Creation-Date: 2020-09-20T10:47:10+02:00
+
+====== GossipItems ======
+Created Sunday 20 September 2020
+
+Gossip is based on a system of channels that transport pointers to GossipItems. The items may contain a valid SIP message, but also additional information about the used ports, previous actions and more.
