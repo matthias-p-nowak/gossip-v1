@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	"fmt"
 	"sync"
 	"sync/atomic"
 )
@@ -20,13 +20,14 @@ var (
  */
 func TestRunner() {
 	execNumber := atomic.AddInt32(&curRunner, 1)
-	log.Printf("executor %d started\n", execNumber)
-	defer log.Printf("executor %d stopped\n", execNumber)
+	if cfg.Verbose >= VerboseTestRunners {
+		fmt.Printf("test runner %d started\n", execNumber)
+		defer fmt.Printf("test runner %d stopped\n", execNumber)
+	}
 	for {
 		// Test if we have to decrease the number of executors
 		if atomic.AddInt32(&TestRunnerCount, 1) > cfg.Concurrent {
-			// too many
-			log.Printf("executor %d is retiring\n", execNumber)
+			// too many, no log - it is already in the defer list
 			// take this one back
 			atomic.AddInt32(&TestRunnerCount, -1)
 			return
