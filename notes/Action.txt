@@ -1,8 +1,24 @@
 Content-Type: text/x-zim-wiki
-Wiki-Format: zim 0.4
+Wiki-Format: zim 0.6
 Creation-Date: 2020-09-13T21:00:21+02:00
 
 ====== Action ======
 Created Sunday 13 September 2020
 
 It's an interface with several implementations.
+
+
+
+There is a current action in the tester and a slice of optional actions.
+Usually the actions take a message from the input channel, but the main action is in Execute. This is for optional messages, which must be tried with a given message. 
+
+===== Delay Action =====
+uses time.After to get a notification when that duration is gone
+
+Send Request
+
+Receive Request
+
+Send Response
+
+Receive Response

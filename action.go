@@ -25,6 +25,7 @@ type Action interface {
 	// got an item and do the relevant stuff
 	Execute(gi *GossipItem) (next *Action, result int)
 	// add a single action to the next
+	SetNext(next *Action) (ok bool)
 }
 
 type DelayAction struct {

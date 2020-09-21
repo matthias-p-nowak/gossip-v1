@@ -1,9 +1,11 @@
 Content-Type: text/x-zim-wiki
-Wiki-Format: zim 0.4
+Wiki-Format: zim 0.6
 Creation-Date: 2020-09-13T20:41:25+02:00
 
 ====== TestRunner ======
 Created Sunday 13 September 2020
+
+The testrunner takes a test, creates a Tester, that one compiles the test into a sets of actions. Each call party is represented by a test party, for which a Runner is executed in parallel. 
 
 The compiler scans the tests and creates a list of actions. Each [[Action|action]] has a previous (which it came from during execution) and next action (or two in case of a branch).
 

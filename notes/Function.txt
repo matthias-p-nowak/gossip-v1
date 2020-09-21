@@ -1,5 +1,5 @@
 Content-Type: text/x-zim-wiki
-Wiki-Format: zim 0.4
+Wiki-Format: zim 0.6
 Creation-Date: 2020-09-12T11:41:30+02:00
 
 ====== Function ======
@@ -58,7 +58,7 @@ The test suites are read in from specifications in yaml. They describe the tests
 3. Transaction layer: consists of helper functions that create new messages based on previous or from scratch
 4. Dialog level: mostly a data structure for status keeping
 5. Call level: general structure with status information and similar
-6. Call party level: a goroutine that is a handler for messages. Each goroutine has an own dedicated channel for receiving [[GossipItems]] .
+6. Call party level: a goroutine that is a handler for messages. Each goroutine has an own dedicated channel for receiving [[GossipItem]] .
 7. Test run: it creates and registers the involved call parties and spawns the associated goroutines, after each run, it accumulated the status quo from each party
 8. Test: it initiates the separate runs and accumulates the results
 9. Test suite: only exists as a data structure for grouping tests
@@ -101,6 +101,9 @@ Since UDP is unreliable, each initial message is send repeatedly until its recep
 
 Cancel and Bye do terminate a call and their response do not provide any additional information. Hence their 200 response can be generated automatically. Similarly, the 100-trying on Invites don't carry information - hence they can be an automatic response and are implement like that.
 
+==== Implementation of retransmissions ====
+The retransmitted message in it's [[GossipItem]] has Retramsnission set to a value. On the initial submission, the via tag is recorded in a map. When a message arrives in that layer, this map is checked and if found, the retransmission is set to None. That way the message gets not retransmitted. Then, the map entry is removed.
+
 ===== Test run =====
 
 A test consists of one or more call parties, each one with a unique phone number. Each party reads its messages from a dedicated channel, which has to be registered in the director. The calling party needs to take a token from the limiter.
@@ -112,5 +115,5 @@ It reads the tests to be executed from a dedicated channel. Each test needs to b
 ====== Components ======
 
 * [[Director]], sorts which function channel will deal with the incoming message
-* [[Scripts,]] at the moment only an example for config 
+* [[Scripts]] , at the moment only an example for config 
 
