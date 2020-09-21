@@ -1,0 +1,22 @@
+Content-Type: text/x-zim-wiki
+Wiki-Format: zim 0.4
+Creation-Date: 2020-09-20T19:33:06+02:00
+
+====== Verbosity ======
+Created Sunday 20 September 2020
+
+The higher the verbosity setting, the more should be printed:
+
+Always: an opening statement and normal ending, number of tests passed, failed, none
+
+1. Aggregated information, number of files, number of tests, number of runs
+2. Configuration place
+3. Names of test files printed
+4. Which loop is running
+5. Starting and ending of test suits
+6. Starting and ending of single tests
+7. Compiling
+8. Creating and retiring of test runners 
+9. Print configuration
+10. Sip messages
+11. Print test as read in
