@@ -102,7 +102,7 @@ func GetTestSuite(fn string) (ts *TestSuite) {
 	return
 }
 
-func (cp *GossipTestCallParty) Print() string {
+func (cp *GossipTestCallParty) String() string {
 	t := cp.test_bl
 	ts := t.suite_bl
 	s1 := fmt.Sprintf("# %s -> %s -> %s \n", ts.Suite, t.Name, cp.Number)
@@ -111,4 +111,12 @@ func (cp *GossipTestCallParty) Print() string {
 		log.Fatal(err)
 	}
 	return s1 + string(data)
+}
+
+func (gtm *GossipTestMsg) String() string {
+	data, err := yaml.Marshal(gtm)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return string(data)
 }
