@@ -37,7 +37,7 @@ func (t *Tester) Compile(test *GossipTest) {
     p := new(TestParty)
     p.tester = t
     t.parties = append(t.parties, p)
-    p.ch = make(chan *GossipItem)
+    p.ch = make(chan *GossipItem,8)
     RegisterChan(Number, c.Number, p.ch)
     p.Call = c
     for j, msg := range c.Msgs {
