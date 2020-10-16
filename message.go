@@ -60,10 +60,9 @@ type GossipMsgHeaders map[string][]string
 type GossipMsg struct {
 	SipLine   string // both Request and response
 	Header    GossipMsgHeaders
-	Body      string
+	Body      []string
 	RetrCount int
 	Direction int
-	RawMsg    []byte
 }
 
 type GossipSession struct {

@@ -1,7 +1,6 @@
 package main
 
 import (
-  "hash/adler32"
   "log"
   "strings"
   "sync"
@@ -24,11 +23,11 @@ type TestParty struct {
 }
 
 func (t *Tester) Insert(p *TestParty, msg *GossipTestMsg, ac Action) {
-  l:=len(p.actions)
+  l := len(p.actions)
   if l > 0 {
     ac.SetNext(p.actions[l-1])
   }
-  ac.Compile(p,msg)
+  ac.Compile(p, msg)
   p.actions = append(p.actions, ac)
 }
 
@@ -37,7 +36,7 @@ func (t *Tester) Compile(test *GossipTest) {
     p := new(TestParty)
     p.tester = t
     t.parties = append(t.parties, p)
-    p.ch = make(chan *GossipItem,8)
+    p.ch = make(chan *GossipItem, 8)
     RegisterChan(Number, c.Number, p.ch)
     p.Call = c
     for j, msg := range c.Msgs {
@@ -48,7 +47,7 @@ func (t *Tester) Compile(test *GossipTest) {
         if cfg.Verbose > 7 {
           log.Printf("  adding delay action for %s\n", msg.Delay)
         }
-        da:=new(DelayAction)
+        da := new(DelayAction)
         t.Insert(p, msg, da)
       }
       if len(msg.In) > 0 && len(msg.Out) > 0 {
@@ -57,8 +56,8 @@ func (t *Tester) Compile(test *GossipTest) {
       switch {
       case len(msg.Out) > 0:
         switch strings.ToUpper(msg.Out) {
-          case "INVITE":
-            t.Insert(p,msg,new(SendInvite))
+        case "INVITE":
+          t.Insert(p, msg, new(SendInvite))
         default:
           log.Fatal("outgoing request " + msg.Out + " is unknown")
         }
@@ -81,15 +80,12 @@ func (t *Tester) Run() {
 // SIP can send the same message several times
 func (t *Tester) CheckNew(gi *GossipItem) bool {
   if gi != nil {
-    if gi.msg != nil {
-      hash := adler32.Checksum(gi.msg.RawMsg)
-      if t.hadMsg[hash] {
+      if t.hadMsg[gi.Hash] {
         return false
       } else {
-        t.hadMsg[hash] = true
+        t.hadMsg[gi.Hash] = true
         return true
       }
-    }
   }
   return false
 }

@@ -26,6 +26,8 @@ const (
   VerboseTestCompiling
   VerboseTestRunners
   VerbosePrintTestData
+  VerboseMessages
+  VerboseMessageData
 )
 
 var (
