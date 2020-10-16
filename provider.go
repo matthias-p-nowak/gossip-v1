@@ -9,11 +9,16 @@ import (
   "sync"
   "hash/adler32"
   "fmt"
+  "bytes"
 )
 
 type Closer interface {
   Close() error
 }
+
+const (
+  BufSize = 131072
+)
 
 var (
   provider    sync.WaitGroup
@@ -49,7 +54,7 @@ func EndProviders() {
   provider.Wait()
 }
 
-func ScanPost(sc *bufio.Scanner) (err error) {
+func ScanPost(sc *bufio.Scanner, laddr, raddr net.Addr,ch chan *GossipItem) (err error) {
   msg := new(GossipMsg)
   msg.Direction = MsgIn
   hash:=adler32.New()
@@ -115,6 +120,19 @@ type TcpGossipProvider struct {
 }
 
 func (p *UdpGossipProvider) Receiver() {
+  // TODO: implement reading...
+  lAddr:=p.netConn.LocalAddr()
+  buf := make([]byte, BufSize)
+  for{
+    n,rAddr,err:=p.netConn.ReadFrom(buf)
+    if err!=nil { log.Fatal(err)}
+    bb:=buf[:n]
+    scan:=bufio.NewScanner(bytes.NewReader(bb))
+     err = ScanPost(scan,lAddr, rAddr, p.ch)
+    if err != nil {
+      log.Fatal(err)
+    }
+  }
 }
 
 /*
@@ -162,14 +180,15 @@ func (p *TcpGossipProvider) Sender() {
 }
 
 func (p *TcpGossipProvider) ReceiveStream(conn *net.TCPConn) {
-  addr := conn.RemoteAddr()
-  hp := addr.String()
+  laddr := conn.LocalAddr()
+  raddr := conn.RemoteAddr()
+  hp := raddr.String()
   p.mConns.Lock()
   p.conns[hp] = conn
   p.mConns.Unlock()
   scanner := bufio.NewScanner(conn)
   for scanner.Scan() {
-    err := ScanPost(scanner)
+    err := ScanPost(scanner,laddr, raddr, p.ch)
     if err != nil {
       log.Fatal(err)
     }
