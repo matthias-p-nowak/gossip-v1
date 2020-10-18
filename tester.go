@@ -2,6 +2,7 @@ package main
 
 import (
   "log"
+  "regexp"
   "strings"
   "sync"
 )
@@ -17,9 +18,22 @@ type Tester struct {
 type TestParty struct {
   tester          *Tester
   ch              chan *GossipItem
-  Call            *GossipTestCallParty
+  CallParty            *GossipTestCallParty
   actions         []Action
   optionalActions []Action
+  actionMap map[string]Action
+}
+
+var (
+  respCodeReg *regexp.Regexp
+)
+
+func init() {
+  r, err := regexp.Compile("([0-9]{3})")
+  if err != nil {
+    log.Fatal(err)
+  }
+  respCodeReg = r
 }
 
 func (t *Tester) Insert(p *TestParty, msg *GossipTestMsg, ac Action) {
@@ -29,6 +43,9 @@ func (t *Tester) Insert(p *TestParty, msg *GossipTestMsg, ac Action) {
   }
   ac.Compile(p, msg)
   p.actions = append(p.actions, ac)
+  if len(msg.Alias)>0 {
+    p.actionMap[msg.Alias]=ac
+  }
 }
 
 func (t *Tester) Compile(test *GossipTest) {
@@ -38,7 +55,7 @@ func (t *Tester) Compile(test *GossipTest) {
     t.parties = append(t.parties, p)
     p.ch = make(chan *GossipItem, 8)
     RegisterChan(Number, c.Number, p.ch)
-    p.Call = c
+    p.CallParty = c
     for j, msg := range c.Msgs {
       if cfg.Verbose > 5 {
         log.Printf("compiling %s.%d.%d: %s\n", test.Name, i, j, c.Number)
@@ -55,11 +72,16 @@ func (t *Tester) Compile(test *GossipTest) {
       }
       switch {
       case len(msg.Out) > 0:
-        switch strings.ToUpper(msg.Out) {
-        case "INVITE":
-          t.Insert(p, msg, new(SendInvite))
-        default:
-          log.Fatal("outgoing request " + msg.Out + " is unknown")
+        m := respCodeReg.FindStringSubmatch(msg.Out)
+        if m != nil {
+
+        } else {
+          switch strings.ToUpper(msg.Out) {
+          case "INVITE":
+            t.Insert(p, msg, new(SendInvite))
+          default:
+            log.Fatal("outgoing request " + msg.Out + " is unknown")
+          }
         }
       default:
         log.Fatal("don't know what to do with this:\n" + msg.String() + "\n")
@@ -80,12 +102,12 @@ func (t *Tester) Run() {
 // SIP can send the same message several times
 func (t *Tester) CheckNew(gi *GossipItem) bool {
   if gi != nil {
-      if t.hadMsg[gi.Hash] {
-        return false
-      } else {
-        t.hadMsg[gi.Hash] = true
-        return true
-      }
+    if t.hadMsg[gi.Hash] {
+      return false
+    } else {
+      t.hadMsg[gi.Hash] = true
+      return true
+    }
   }
   return false
 }
@@ -103,7 +125,7 @@ func (tp *TestParty) Runner() {
       }
     }
   } else {
-    log.Fatal("no action for ", tp.Call.String())
+    log.Fatal("no action for ", tp.CallParty.String())
   }
   tp.tester.wg.Done()
 }
