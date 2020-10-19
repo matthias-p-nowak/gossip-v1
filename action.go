@@ -94,10 +94,22 @@ func (da *DelayAction) Run() (next Action, result int) {
 
 type SendInvite struct {
   DefaultAction
+  tr *GossipTransaction
 }
 
 func (si *SendInvite) Compile(tp *TestParty, m *GossipTestMsg){
+  if len(tp.actions) == 0 {
+    // the first invite
+    c:=new(GossipCall)
+    d:=c.NewDialog()
+    t:=d.NewTransaction()
+    si.tr=t
+  }
+}
 
+func (si *SendInvite)GetTransaction()(tr *GossipTransaction){
+  tr=si.tr
+  return
 }
 
 func (si *SendInvite) Run() (next Action, result int) {

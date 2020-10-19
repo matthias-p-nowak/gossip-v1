@@ -42,7 +42,7 @@ const (
 
 // transaction states
 const (
-  TransReqested = iota
+  TransRequested = iota
   TransInitiated
   TransResponded
 )
@@ -78,6 +78,7 @@ type GossipTransaction struct {
   State     int
   ViaBranch string
   Dialog *GossipDialog
+  Pos int
 }
 type GossipDialog struct {
   LocalTag      string
@@ -86,6 +87,7 @@ type GossipDialog struct {
   RemoteContact string
   Transactions  []*GossipTransaction
   Call *GossipCall
+  Pos int
 }
 
 //
@@ -109,4 +111,20 @@ func RandString(l int) string {
     bb[i] = Alphabet[rand.Intn(aLen)]
   }
   return string(bb)
+}
+
+func (gd *GossipDialog) NewTransaction()(nt *GossipTransaction){
+  nt=new(GossipTransaction)
+  nt.Dialog=gd
+  nt.Pos=len(gd.Transactions)
+  gd.Transactions=append(gd.Transactions,nt)
+  return
+}
+
+func (gc *GossipCall) NewDialog()(nd *GossipDialog){
+  nd=new(GossipDialog)
+  nd.Call=gc
+  nd.Pos=len(gc.Dialogs)
+  gc.Dialogs=append(gc.Dialogs,nd)
+  return
 }
