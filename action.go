@@ -11,44 +11,47 @@ const (
   ActionFailed
 )
 
+// Action is the basic interface for all actions
 type Action interface {
   // setup from data
+  // TODO - remove compile, make special functions for each one
   Compile(tp *TestParty, m *GossipTestMsg)
-  // do a normal execution including reading from channel
-  Run() (next Action, result int)
+  // do a normal execution including reading from channel, when reading items from channel, call Execute
+  Run(tp *TestParty) (next int, result int)
   // is this a message this can handle?
   IsMatch(gi *GossipItem) bool
   // got an item and do the relevant stuff
-  Execute(gi *GossipItem) (next Action, result int)
-  // add a single action to the next
-  SetNext(next Action) (ok bool)
+  Execute(gi *GossipItem) (next int, result int)
   GetTransaction() (tr *GossipTransaction)
 }
 
+// DefaultAction combines the common parts for all actions
 type DefaultAction struct {
-  nextAction Action
-  tp         *TestParty
+  // backlink
+  tp *TestParty
+  // data for this action from the test suite
   msg        *GossipTestMsg
+  // position this action is stored in the tp.actions slice
+  pos int
 }
 
-func (da *DefaultAction) SetNext(next Action) bool {
-  if da.nextAction != nil {
-    return false
-  }
-  da.nextAction = next
-  return true
-}
-
+// IsMatch per default false, must be overriden by optional actions
 func (da *DefaultAction) IsMatch(gi *GossipItem) bool {
   return false
 }
 
-func (da *DefaultAction) Execute(gi *GossipItem) (next Action, result int) {
+
+func (da *DefaultAction) DefaultNext(tp *TestParty) int {
+  return da.pos+1
+}
+// 
+func (da *DefaultAction) Execute(gi *GossipItem) (next int, result int) {
   log.Fatal("this should never be called - something wrong")
-  return da.nextAction, ActionFailed
+  next=da.DefaultNext()
+  result=ActionFailed
+  return 
 }
 func (da *DefaultAction) Compile(tp *TestParty, msg *GossipTestMsg) {
-  da.tp = tp
   da.msg = msg
 }
 

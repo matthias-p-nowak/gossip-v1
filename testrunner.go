@@ -36,8 +36,8 @@ func TestRunner() {
 		test := <-TestTasks // fetching one test
 		TestLocks[test].Lock()
 		tester := Tester{}
-		tester.Compile(test)
-		tester.Run()
+		tester.CompileTest(test)
+		tester.RunTest()
 		TestLocks[test].Unlock()
 		// one test done
 		TestsUnderExec.Done()

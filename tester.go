@@ -7,55 +7,76 @@ import (
   "sync"
 )
 
+// Tester - main structure for executing a certain test
 // compiled for the whole test
 type Tester struct {
+  // a map of hash values of messages received before
   hadMsg  map[uint32]bool
+  // wg waits on all call parties to be finished
   wg      sync.WaitGroup
+  // parties == all end points involved in a test call
   parties []*TestParty
+  // the initiating call party should set this to false
+  running bool
 }
 
-// for one party
+// TestParty - for one party
 type TestParty struct {
+  // backlink 
   tester          *Tester
+  // dedicated channel for this call party
   ch              chan *GossipItem
+  // input data
   CallParty            *GossipTestCallParty
+  // the normal actions that the RunTest goes through
   actions         []Action
+  // if the incoming message does not match, these are tried
   optionalActions []Action
-  actionMap map[string]Action
+  // map of alias actions 
+  actionMap map[string] int
+ 
 }
 
 var (
+  // respCodeReg is the regular expression for 3 digits
   respCodeReg *regexp.Regexp
 )
 
 func init() {
+  // initializing respCodeReg
   r, err := regexp.Compile("([0-9]{3})")
-  if err != nil {
-    log.Fatal(err)
-  }
+  if err != nil { log.Fatal(err)  }
   respCodeReg = r
 }
 
+// Insert takes ac and does some common actions
 func (t *Tester) Insert(p *TestParty, msg *GossipTestMsg, ac Action) {
-  l := len(p.actions)
-  if l > 0 {
-    ac.SetNext(p.actions[l-1])
-  }
-  ac.Compile(p, msg)
+  // default
+  l:=len(p.actions)
   p.actions = append(p.actions, ac)
   if len(msg.Alias)>0 {
-    p.actionMap[msg.Alias]=ac
+    p.actionMap[msg.Alias]=l
   }
 }
 
-func (t *Tester) Compile(test *GossipTest) {
-  for i, c := range test.Calls {
-    p := new(TestParty)
-    p.tester = t
-    t.parties = append(t.parties, p)
-    p.ch = make(chan *GossipItem, 8)
+// creates a new TestParty and initializes it
+func (t *Tester) createTestParty(c *GossipTestCallParty)(tp *TestParty){
+  tp=new(TestParty)
+  tp.tester=t
+  tp.actionMap=make(map[string]int)
+  t.parties = append(t.parties, tp)
+  tp.ch = make(chan *GossipItem, 8)
+  tp.CallParty = c
+  return 
+}
+
+// CompileTest is the first phase, where datastructures are created and connections established
+func (t *Tester) CompileTest(test *GossipTest) {
+  // 
+  for i, c := range test.CallParties {
+    p := t.createTestParty(c)
     RegisterChan(Number, c.Number, p.ch)
-    p.CallParty = c
+
     for j, msg := range c.Msgs {
       if cfg.Verbose > 5 {
         log.Printf("compiling %s.%d.%d: %s\n", test.Name, i, j, c.Number)
@@ -90,16 +111,19 @@ func (t *Tester) Compile(test *GossipTest) {
   }
 }
 
-func (t *Tester) Run() {
+// RunTest
+func (t *Tester) RunTest() {
+  t.running=true
   l := len(t.parties)
   t.wg.Add(l)
   for r := 0; r < l; r++ {
-    go t.parties[r].Runner()
+    go t.parties[r].RunTest()
   }
   t.wg.Wait()
 }
 
-// SIP can send the same message several times
+// CheckNew checks if this message was received before, this one being a retransmission
+// SIP can send the same message several times in retransmissions
 func (t *Tester) CheckNew(gi *GossipItem) bool {
   if gi != nil {
     if t.hadMsg[gi.Hash] {
@@ -112,13 +136,17 @@ func (t *Tester) CheckNew(gi *GossipItem) bool {
   return false
 }
 
-func (tp *TestParty) Runner() {
+func (tp *TestParty) RunTest() {
+  defer tp.tester.wg.Done()
   // TODO: do the work
   if len(tp.actions) > 0 {
-    ac := tp.actions[0]
-    for ac != nil {
+    pos := 0
+    for pos >=0 && pos<=len(tp.actions)  {
       var res int
-      ac, res = ac.Run()
+      if ! tp.running {
+        break
+      }
+      pos, res = tp.actions[pos].Run()
       switch res {
       default:
         log.Fatal("no idea how to handle result ", res)
@@ -127,7 +155,6 @@ func (tp *TestParty) Runner() {
   } else {
     log.Fatal("no action for ", tp.CallParty.String())
   }
-  tp.tester.wg.Done()
 }
 
 func (tp *TestParty) CheckOptional(gi *GossipItem) (next Action, result int) {

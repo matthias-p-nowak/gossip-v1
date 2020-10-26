@@ -75,7 +75,7 @@ type GossipTestCallParty struct {
 type GossipTest struct {
   suite_bl *TestSuite
   Name     string                 `yaml:"name"`
-  Calls    []*GossipTestCallParty `yaml:"calls"`
+  CallParties    []*GossipTestCallParty `yaml:"calls"`
 }
 
 // a set of tests, used to group tests
@@ -97,7 +97,7 @@ func GetTestSuite(fn string) (ts *TestSuite) {
   }
   for _, t := range ts.Tests {
     t.suite_bl = ts
-    for _, cp := range t.Calls {
+    for _, cp := range t.CallParties {
       cp.test_bl = t
     }
   }
