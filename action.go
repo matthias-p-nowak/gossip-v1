@@ -6,6 +6,7 @@ import (
 )
 
 const (
+  // Results of Actions
   ActionSkip = iota
   ActionSuccess
   ActionFailed
@@ -17,7 +18,7 @@ type Action interface {
   // TODO - remove compile, make special functions for each one
   Compile(tp *TestParty, m *GossipTestMsg)
   // do a normal execution including reading from channel, when reading items from channel, call Execute
-  Run(tp *TestParty) (next int, result int)
+  Run() (next int, result int)
   // is this a message this can handle?
   IsMatch(gi *GossipItem) bool
   // got an item and do the relevant stuff
@@ -30,7 +31,7 @@ type DefaultAction struct {
   // backlink
   tp *TestParty
   // data for this action from the test suite
-  msg        *GossipTestMsg
+  msg *GossipTestMsg
   // position this action is stored in the tp.actions slice
   pos int
 }
@@ -40,30 +41,36 @@ func (da *DefaultAction) IsMatch(gi *GossipItem) bool {
   return false
 }
 
-
-func (da *DefaultAction) DefaultNext(tp *TestParty) int {
-  return da.pos+1
+// DefaultNext - next action is usually the next one to execute
+func (da *DefaultAction) DefaultNext() int {
+  return da.pos + 1
 }
-// 
+
+// Execute deals with an incoming item, called within Run
 func (da *DefaultAction) Execute(gi *GossipItem) (next int, result int) {
   log.Fatal("this should never be called - something wrong")
-  next=da.DefaultNext()
-  result=ActionFailed
-  return 
+  next = da.DefaultNext()
+  result = ActionFailed
+  return
 }
+
+// Compile prepares the execution of this test,
 func (da *DefaultAction) Compile(tp *TestParty, msg *GossipTestMsg) {
   da.msg = msg
 }
 
-func (da *DefaultAction) GetTransaction() (tr *GossipTransaction){
+// GetTransaction returns the transaction for this action, if there is one
+func (da *DefaultAction) GetTransaction() (tr *GossipTransaction) {
   return
 }
 
+// DelayAction for simple delays
 type DelayAction struct {
   DefaultAction
   Duration time.Duration
 }
 
+// Compile extracts the delay
 func (da *DelayAction) Compile(tp *TestParty, msg *GossipTestMsg) {
   da.tp = tp
   dur, err := time.ParseDuration(msg.Delay)
@@ -73,49 +80,62 @@ func (da *DelayAction) Compile(tp *TestParty, msg *GossipTestMsg) {
   da.Duration = dur
 }
 
-func (da *DelayAction) Run() (next Action, result int) {
+// Run executes the delay
+func (da *DelayAction) Run() (next int, result int) {
   ch := time.After(da.Duration)
   if cfg.Verbose > 9 {
     log.Printf("waiting for %s for %s\n", da.Duration.String(), da.tp.CallParty.Number)
   }
-  for {
+  // need endless for-loop due to nil-items
+  for da.tp.tester.running {
     select {
+      // timed out
     case <-ch:
       if cfg.Verbose > 9 {
         log.Printf("  waiting ended for %s\n", da.tp.CallParty.Number)
       }
-      return da.nextAction, ActionSuccess
+      return da.DefaultNext(), ActionSuccess
+      // got something from the call party related channel
     case gi := <-da.tp.ch:
       if gi != nil {
+        // ignore the nil messages
         if da.tp.tester.CheckNew(gi) {
           return da.tp.CheckOptional(gi)
         }
       }
     }
   }
+  next=-1
+  result=ActionFailed
+  return
 }
 
+// SendInvite action sends invites
 type SendInvite struct {
   DefaultAction
   tr *GossipTransaction
 }
 
-func (si *SendInvite) Compile(tp *TestParty, m *GossipTestMsg){
+// Compile prepares the SendInvite action
+func (si *SendInvite) Compile(tp *TestParty, m *GossipTestMsg) {
   if len(tp.actions) == 0 {
     // the first invite
-    c:=new(GossipCall)
-    d:=c.NewDialog()
-    t:=d.NewTransaction()
-    si.tr=t
+    c := new(GossipCall)
+    d := c.NewDialog()
+    t := d.NewTransaction()
+    si.tr = t
   }
 }
 
-func (si *SendInvite)GetTransaction()(tr *GossipTransaction){
-  tr=si.tr
+// GetTransaction returns the created transaction
+func (si *SendInvite) GetTransaction() (tr *GossipTransaction) {
+  tr = si.tr
   return
 }
 
-func (si *SendInvite) Run() (next Action, result int) {
-  next=si.nextAction
+// Run executes the SendInvite action
+func (si *SendInvite) Run() (next int, result int) {
+  next = -1
+  result = ActionSuccess
   return
 }
