@@ -11,7 +11,8 @@ import (
 // compiled for the whole test
 type Tester struct {
 	// a map of hash values of messages received before
-	hadMsg map[uint32]bool
+	hadMsg  map[uint32]bool
+	mHadMsg sync.Mutex
 	// wg waits on all call parties to be finished
 	wg sync.WaitGroup
 	// parties == all end points involved in a test call
@@ -60,7 +61,7 @@ func (t *Tester) Insert(p *TestParty, msg *GossipTestMsg, ac Action) {
 	}
 }
 
-// creates a new TestParty and initializes it
+// createTestParty creates a new TestParty and initializes it
 func (t *Tester) createTestParty(c *GossipTestCallParty) (tp *TestParty) {
 	tp = new(TestParty)
 	tp.tester = t
@@ -112,7 +113,7 @@ func (t *Tester) CompileTest(test *GossipTest) {
 	}
 }
 
-// RunTest
+// RunTest starts all the involved parties
 func (t *Tester) RunTest() {
 	t.running = true
 	l := len(t.parties)
@@ -120,12 +121,15 @@ func (t *Tester) RunTest() {
 	for r := 0; r < l; r++ {
 		go t.parties[r].RunTest()
 	}
+	// wait for all parties
 	t.wg.Wait()
 }
 
 // CheckNew checks if this message was received before, this one being a retransmission
 // SIP can send the same message several times in retransmissions
 func (t *Tester) CheckNew(gi *GossipItem) bool {
+	t.mHadMsg.Lock()
+	defer t.mHadMsg.Unlock()
 	if gi != nil {
 		if t.hadMsg[gi.Hash] {
 			return false
@@ -137,31 +141,30 @@ func (t *Tester) CheckNew(gi *GossipItem) bool {
 	return false
 }
 
+// RunTest runs for one involved call party
 func (tp *TestParty) RunTest() {
 	defer tp.tester.wg.Done()
 	// TODO: do the work
-	if len(tp.actions) > 0 {
-		pos := 0
-		for pos >= 0 && pos <= len(tp.actions) {
-			var res int
-			if !tp.tester.running {
-				break
-			}
-			pos, res = tp.actions[pos].Run()
-			switch res {
-			default:
-				log.Fatal("no idea how to handle result ", res)
-			}
+	pos := 0
+	for pos >= 0 && pos <= len(tp.actions) {
+		var res int
+		if !tp.tester.running {
+			break
 		}
-	} else {
-		log.Fatal("no action for ", tp.CallParty.String())
+		pos, res = tp.actions[pos].Run()
+		switch res {
+		default:
+			log.Fatal("no idea how to handle result ", res)
+		}
 	}
 }
 
+// CheckOptional checks actions that were marked as optional for a flexible reaction to incoming messages
 func (tp *TestParty) CheckOptional(gi *GossipItem) (next int, result int) {
 	// TODO: check optional message items
 	next = -1
 	result = ActionSuccess
+	// not yet implemented
 	log.Fatal("implement function")
 	return
 }

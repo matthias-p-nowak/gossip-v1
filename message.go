@@ -22,8 +22,8 @@ const (
 // the message direction
 const (
 	Undefined = iota
-	MsgIn
-	MsgOut
+	MsgIncoming
+	MsgOutgoing
 )
 
 // call/request status, repeating or not is on msg
@@ -55,31 +55,40 @@ const (
 )
 
 var (
+	// Alphabet comprises the symbols for creating random strings
 	Alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 )
 
-// Headers might have multiple values (via, record-routes, route)
+// GossipMsgHeadersHeaders: Headers might have multiple values (via, record-routes, route),
+// hence it contains a list of values
 type GossipMsgHeaders map[string][]string
 
-// The SIP message with it's components
+// GossipMsg contains the SIP message
 type GossipMsg struct {
-	SipLine   string // both Request and response
-	Header    GossipMsgHeaders
-	Body      []string
+	// SipLine: the first line of both Request and response
+	SipLine string
+	// normal Headers
+	Header GossipMsgHeaders
+	// extra Parameters for constructing the first Route-Header
+	RouteParams map[string]string
+	// Body line by line
+	Body []string
+	// RetrCount: retransmission count
 	RetrCount int
+	// Direction: outgoing or incoming
 	Direction int
 }
 
-type GossipSession struct {
-	State int
-}
-
+// GossipTransaction: details
 type GossipTransaction struct {
 	State     int
 	ViaBranch string
 	Dialog    *GossipDialog
 	Pos       int
 }
+
+// GossipDialog: dialog details
+// To/From contains the Remote/Local tag dependend on direction and Request/Response
 type GossipDialog struct {
 	LocalTag      string
 	RemoteTag     string
@@ -90,11 +99,11 @@ type GossipDialog struct {
 	Pos           int
 }
 
-//
+// GossipCall: details
 type GossipCall struct {
-	CallId       string
-	CallSeq      int
-	Status       int `CallStatus`
+	CallId       string // constant
+	CallSeq      int    // increasing
+	Status       int    `CallStatus`
 	LocalContact string
 	Dialogs      []*GossipDialog
 }
@@ -104,6 +113,7 @@ func init() {
 	rand.Seed(t)
 }
 
+// RandStrings returns a string of length <l>
 func RandString(l int) string {
 	aLen := len(Alphabet)
 	bb := make([]byte, l)
@@ -113,6 +123,7 @@ func RandString(l int) string {
 	return string(bb)
 }
 
+// NewTransaction
 func (gd *GossipDialog) NewTransaction() (nt *GossipTransaction) {
 	nt = new(GossipTransaction)
 	nt.Dialog = gd
@@ -121,6 +132,7 @@ func (gd *GossipDialog) NewTransaction() (nt *GossipTransaction) {
 	return
 }
 
+// NewDialog
 func (gc *GossipCall) NewDialog() (nd *GossipDialog) {
 	nd = new(GossipDialog)
 	nd.Call = gc
