@@ -45,11 +45,9 @@ var (
 func setup() {
   //LimiterInit()
   // start the SIP providers
-  /*
   for _, provider := range cfg.Local {
-    pNewProvider(provider)
+    NewProvider(provider)
   }
-  */
 }
 
 // handleSignals is not yet functional
@@ -125,13 +123,15 @@ func main() {
       TestLocks[t] = new(sync.Mutex)
     }
   }
+  */
+
   // running the tests
   for i := 0; i < cfg.Loops; i++ {
     if cfg.Continuous {
       i = 0
     }
     if cfg.Verbose >= VerboseTestLoop {
-      fmt.Printf("test loop number %d\n", i)
+      fmt.Printf("test loop number %d\n", i+1)
     }
     // all test suites
 
@@ -144,8 +144,8 @@ func main() {
         if cfg.Verbose >= VerboseSingleTests {
           fmt.Printf(" test(%d): %s\n", ti, test.Name)
         }
-        //
-        TestsUnderExec.Add(1) //
+        /*
+        //TestsUnderExec.Add(1) //
         // find out if there are enough testers running
         if atomic.LoadInt32(&TestRunnerCount) < cfg.Concurrent {
           if cfg.Verbose >= VerboseTestRunners {
@@ -155,11 +155,12 @@ func main() {
         }
         // submit test to the running TestRunners
         TestTasks <- test
+        */
       }
     }
   }
   log.Println("waiting for tests to finish")
-  TestsUnderExec.Wait()
+  //TestsUnderExec.Wait()
   EndProviders()
-  */
+
 }
